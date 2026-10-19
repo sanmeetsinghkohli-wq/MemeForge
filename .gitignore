@@ -19,7 +19,6 @@ memes/
 memotion_dataset_7k/images/
 *.zip
 *.tar.gz
-*.pkl
 
 # Generated run artifacts
 assets/generated/

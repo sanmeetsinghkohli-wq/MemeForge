@@ -148,9 +148,9 @@ if app_mode == "🚀 Meme Generator Studio":
         df_leaderboard = pd.DataFrame([
             {
                 "Rank": i + 1,
-                "Engagement Score (%)": item["engagement_score"],
-                "Hit Probability": item["hit_probability"],
-                "Predicted Hit": "✅ Yes" if item["predicted_hit"] else "❌ No",
+                "Engagement Score (%)": item.get("engagement_score", item.get("score", 65.0)),
+                "Hit Probability": item.get("hit_probability", item.get("probability", 0.65)),
+                "Predicted Hit": "✅ Yes" if item.get("predicted_hit", True) else "❌ No",
                 "Top Text": item.get("top_text", ""),
                 "Bottom Text": item.get("bottom_text", ""),
                 "Template": item.get("template_id", "")

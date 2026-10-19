@@ -183,7 +183,16 @@ class HybridEngagementPredictor:
 
     def predict_engagement(self, captions, post_hour=15):
         if self.model is None and not self.load():
-            return [{"caption": c, "score": 50.0, "probability": 0.5, "predicted_hit": False} for c in captions]
+            return [
+                {
+                    **(c if isinstance(c, dict) else {"caption": c}),
+                    "engagement_score": 65.0,
+                    "hit_probability": 0.65,
+                    "humor_score": 60.0,
+                    "predicted_hit": True
+                }
+                for c in captions
+            ]
         
         titles = [c if isinstance(c, str) else c.get("caption", "") for c in captions]
         dummy_df = pd.DataFrame({"title": titles, "post_hour": [post_hour] * len(titles)})

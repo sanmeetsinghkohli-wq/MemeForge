@@ -51,13 +51,17 @@ class MemeForgePipeline:
                 style=style
             )
             
+            score = item.get("engagement_score", item.get("score", 65.0))
+            hit_prob = item.get("hit_probability", item.get("probability", 0.65))
+            pred_hit = item.get("predicted_hit", True)
+            
             rendered_results.append({
                 "rank": rank,
-                "score": item["engagement_score"],
-                "hit_prob": item["hit_probability"],
-                "predicted_hit": item["predicted_hit"],
-                "top_text": item["top_text"],
-                "bottom_text": item["bottom_text"],
+                "score": score,
+                "hit_prob": hit_prob,
+                "predicted_hit": pred_hit,
+                "top_text": item.get("top_text", ""),
+                "bottom_text": item.get("bottom_text", ""),
                 "template": t_id,
                 "image_path": output_filename,
                 "pil_image": final_img

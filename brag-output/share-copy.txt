@@ -1,0 +1,44 @@
+=== X / Twitter Launch Post ===
+
+Most marketing memes get scrolled past because brands misjudge the room and post cringe.
+
+I built MemeForge: An AI Meme Studio that scores meme concepts before you post them.
+
+🧠 Predictor trained on 10,200+ viral Reddit memes (ROC-AUC 0.68)
+✨ Multimodal Google Gemini visual generation
+🔤 Automated high-contrast PIL typography
+⚡ Streamlit dashboard with 1-click downloads
+
+Drop your product name, get the top 3 memes predicted to hit.
+
+Check out the code & project: https://github.com/sanmeetsinghkohli-wq/MemeForge
+
+#AI #MachineLearning #MemeMarketing #BuildInPublic #DataScience #Python
+
+==================================================
+
+=== LinkedIn Announcement ===
+
+Meme marketing works because it feels native to social feeds—yet most teams waste hours guessing which concepts will land.
+
+Excited to introduce MemeForge: An AI Marketing Meme Studio with Engagement Prediction.
+
+Instead of guessing, MemeForge uses a three-tier architecture:
+1. Brainstorms candidate concepts tailored to your product and tone.
+2. An NLP classifier (TF-IDF + metadata signals) scores predicted engagement based on 10,000+ real memes.
+3. Renders only the top-ranked concepts using Google Gemini AI and pixel-perfect PIL typography.
+
+Full open-source codebase, EDA report, and Streamlit app available on GitHub:
+👉 https://github.com/sanmeetsinghkohli-wq/MemeForge
+
+==================================================
+
+=== Discord / Reddit / Group Chat ===
+
+Hey everyone! Built an end-to-end AI marketing meme generator that actually predicts virality before creating images:
+- Trained on 3,200+ Reddit meme posts + 7,000 SemEval Memotion memes
+- Scores concepts with balanced Logistic Regression (<2ms latency)
+- Generates backgrounds with Gemini AI & overlays crisp Impact font
+- Full Streamlit web UI
+
+Would love your thoughts & feedback: https://github.com/sanmeetsinghkohli-wq/MemeForge

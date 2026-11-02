@@ -302,6 +302,13 @@ elif app_mode == "📑 Project Report & Presentation Guide":
     st.markdown('<div class="main-header">MemeForge: Technical Project Report</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Comprehensive academic and practical documentation for laboratory evaluation.</div>', unsafe_allow_html=True)
 
+    # Launch / Demo Video Showcase
+    if os.path.exists("brag-output/brag.mp4"):
+        st.subheader("🎬 Official MemeForge Product Launch Video (20s)")
+        st.video("brag-output/brag.mp4")
+        st.caption("Generated following the `/brag` launch video framework: Hook → Reveal → Highlights → Outro (1080p, 30fps).")
+        st.divider()
+
     report_path = "PROJECT_REPORT.md"
     if os.path.exists(report_path):
         with open(report_path, "r", encoding="utf-8") as f:

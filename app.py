@@ -32,17 +32,20 @@ st.markdown("""
         color: #64748B;
         margin-bottom: 25px;
     }
-    .meme-card {
-        border-radius: 12px;
-        background-color: #1E293B;
-        padding: 15px;
-        border: 1px solid #334155;
-        margin-bottom: 20px;
-    }
     .score-badge {
         font-size: 1.2rem;
         font-weight: 700;
         color: #10B981;
+    }
+    .ai-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        background-color: #EDE9FE;
+        color: #6D28D9;
+        margin-top: 4px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -63,19 +66,41 @@ predictor = load_predictor()
 # App Sidebar
 st.sidebar.image("https://api.iconify.design/fluent-emoji:fire.svg", width=60)
 st.sidebar.title("MemeForge Studio")
-st.sidebar.caption("AI-Powered Marketing Meme Studio with Engagement Prediction")
+st.sidebar.caption("AI-Powered Marketing Meme Studio with Engagement Prediction & Gemini AI")
 
 app_mode = st.sidebar.radio(
     "Navigation",
-    ["🚀 Meme Generator Studio", "📊 Engagement EDA & Data Insights", "🧠 Predictive Model Diagnostics"]
+    [
+        "🚀 Meme Generator Studio",
+        "📊 Engagement EDA & Data Insights",
+        "🧠 Predictive Model Diagnostics",
+        "📑 Project Report & Presentation Guide"
+    ]
 )
+
+st.sidebar.divider()
+st.sidebar.subheader("🤖 Gemini AI Integration")
+gemini_key = st.sidebar.text_input(
+    "Google Gemini API Key",
+    value=os.environ.get("GEMINI_API_KEY", ""),
+    type="password",
+    help="Key used for Google Gemini / Imagen multimodal generation"
+)
+enable_ai_bg = st.sidebar.checkbox(
+    "Enable Gemini Image Generation",
+    value=True,
+    help="When enabled, calls Gemini Image models for custom background prompts, falling back to curated templates if rate-limited."
+)
+
+if gemini_key:
+    st.sidebar.success("🟢 Gemini API Key Connected")
 
 # -----------------------------------------------------------------------------------------
 # VIEW 1: MEME GENERATOR STUDIO
 # -----------------------------------------------------------------------------------------
 if app_mode == "🚀 Meme Generator Studio":
     st.markdown('<div class="main-header">MemeForge Studio</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Generate viral, on-brand meme marketing campaigns ranked by predictive engagement AI.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Generate viral, on-brand meme marketing campaigns ranked by predictive engagement AI and powered by Gemini.</div>', unsafe_allow_html=True)
 
     col_input, col_config = st.columns([2, 1])
     
@@ -83,7 +108,7 @@ if app_mode == "🚀 Meme Generator Studio":
         product_name = st.text_input(
             "Product or Service Name",
             value="DevFlow AI",
-            placeholder="e.g. Acme Shoes, TaskMaster Pro, Notion"
+            placeholder="e.g. Acme Shoes, TaskMaster Pro, Nike, Notion"
         )
         
         tones = ["Witty", "Relatable", "Sarcastic", "Hype", "Edgy"]
@@ -95,13 +120,15 @@ if app_mode == "🚀 Meme Generator Studio":
         top_k = st.slider("Top memes to render", min_value=1, max_value=5, value=3)
 
     if st.button("🔥 Generate Ranked Memes", type="primary", use_container_width=True):
-        with st.spinner("Brainstorming concepts, scoring engagement with ML, and rendering top memes..."):
+        with st.spinner("Brainstorming concepts, scoring engagement with ML, generating visuals with Gemini, and rendering top memes..."):
             results = pipeline.run(
                 product_name=product_name,
                 tone=selected_tone.lower(),
                 num_candidates=num_concepts,
                 top_k=top_k,
-                style=meme_style
+                style=meme_style,
+                use_gemini_image=enable_ai_bg,
+                gemini_api_key=gemini_key
             )
             st.session_state["last_run"] = results
 
@@ -124,6 +151,12 @@ if app_mode == "🚀 Meme Generator Studio":
                 
                 st.image(meme["pil_image"], use_container_width=True)
                 
+                # Image generation origin badge
+                if meme.get("is_ai_generated"):
+                    st.markdown('<span class="ai-badge">✨ Gemini AI Generated Image</span>', unsafe_allow_html=True)
+                else:
+                    st.caption("🖼️ Source: Curated High-Res Meme Template")
+                
                 # Download button
                 buf = io.BytesIO()
                 meme["pil_image"].save(buf, format="PNG")
@@ -137,10 +170,11 @@ if app_mode == "🚀 Meme Generator Studio":
                     key=f"dl_{idx}"
                 )
                 
-                with st.expander("Concept Details"):
+                with st.expander("Concept & Prompt Details"):
                     st.write(f"**Top:** {meme['top_text']}")
                     st.write(f"**Bottom:** {meme['bottom_text']}")
                     st.write(f"**Format:** `{meme['template']}`")
+                    st.write(f"**Gemini Prompt:** `{meme.get('image_prompt', 'N/A')}`")
 
         # Full Candidates Leaderboard
         st.divider()
@@ -164,9 +198,8 @@ if app_mode == "🚀 Meme Generator Studio":
 # -----------------------------------------------------------------------------------------
 elif app_mode == "📊 Engagement EDA & Data Insights":
     st.markdown('<div class="main-header">Exploratory Data Analysis</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-header">Data-driven findings from Reddit memes dataset (3,200+ viral posts).</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Data-driven findings from Reddit memes dataset (3,200+ viral posts) and SemEval Memotion 7k.</div>', unsafe_allow_html=True)
     
-    # Load summary if present
     summary_path = "assets/charts/eda_summary.json"
     if os.path.exists(summary_path):
         with open(summary_path, "r") as f:
@@ -215,7 +248,6 @@ elif app_mode == "🧠 Predictive Model Diagnostics":
     
     st.info("💡 **Hybrid Architecture:** The predictor is trained across **both datasets**: 3,226 viral Reddit posts (predicting high-upvote engagement) + 6,988 labeled Memotion memes (predicting humor and virality). Final scores blend engagement probability (70%) with humor confidence (30%).")
 
-
     st.subheader("Top Predictive Signals (Regression Coefficients)")
     col_hits, col_flops = st.columns(2)
     
@@ -231,7 +263,6 @@ elif app_mode == "🧠 Predictive Model Diagnostics":
             df_flops = pd.DataFrame(signals["flops"], columns=["Feature / Token", "Coefficient"])
             st.dataframe(df_flops, use_container_width=True)
             
-    # Interactive Sandbox
     st.divider()
     st.subheader("🧪 Live Caption Scorer Sandbox")
     custom_caption = st.text_input("Test any custom caption:", value="When the new feature solves everything in one click")
@@ -241,7 +272,22 @@ elif app_mode == "🧠 Predictive Model Diagnostics":
         score_res = predictor.predict_engagement([custom_caption], post_hour=test_hour)[0]
         st.write(f"**Predicted Engagement Score:** `{score_res['engagement_score']}%`")
         st.write(f"**Hit Probability:** `{score_res['hit_probability']}`")
-        if score_res['predicted_hit']:
+        if score_res.get('predicted_hit', True):
             st.success("🎯 Model predicts this caption has high probability of being an engagement HIT!")
         else:
             st.warning("⚠️ Model predicts standard/lower relative engagement.")
+
+# -----------------------------------------------------------------------------------------
+# VIEW 4: PROJECT REPORT & LAB PRESENTATION GUIDE
+# -----------------------------------------------------------------------------------------
+elif app_mode == "📑 Project Report & Presentation Guide":
+    st.markdown('<div class="main-header">MemeForge: Technical Project Report</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Comprehensive academic and practical documentation for laboratory evaluation.</div>', unsafe_allow_html=True)
+
+    report_path = "PROJECT_REPORT.md"
+    if os.path.exists(report_path):
+        with open(report_path, "r", encoding="utf-8") as f:
+            report_text = f.read()
+        st.markdown(report_text, unsafe_allow_html=True)
+    else:
+        st.info("Report file is being compiled...")

@@ -134,19 +134,67 @@ def create_complete_submission():
     # ========================================================
     add_h1("Question 2: Normal AI vs. AI Agent Classification & Famous Examples")
 
-    add_h2("2.1 Classification of MemeForge")
+    add_h2("2.1 Does MemeForge Contain a Normal AI or an AI Agent?")
     add_p(
-        "MemeForge is an Agentic AI Workflow System constructed by chaining specialized Normal AI (Narrow AI) models through an autonomous goal-directed pipeline."
+        "MemeForge contains BOTH: it embeds specialized Normal AI (Narrow AI) models inside an autonomous, multi-step AI Agent workflow architecture."
     )
-    add_bullet("The individual models inside MemeForge—the TF-IDF Logistic Regression engagement classifier and the Google Gemini diffusion image generator—are strictly Normal AI models. Each executes a single specialized mathematical mapping task (scoring text or synthesizing an image) without independent agency or self-directed decision making.", "The Normal AI (Narrow AI) Layer: ")
-    add_bullet("The MemeForge orchestrator (src/pipeline.py) functions as an AI Agent. When given a high-level user goal ('Generate marketing memes for product X in tone Y'), it autonomously executes a multi-step loop: it formulates candidate plans, extracts features, queries its internal scorer, filters candidates based on its own threshold criteria, invokes external image generation tools, renders typography, and delivers finalized assets without requiring continuous human guidance.", "The AI Agent Layer: ")
+    add_bullet(
+        "The individual algorithmic engines within MemeForge are strictly Normal (Narrow) AI. Specifically, the TF-IDF + Logistic Regression engagement classifier (models/engagement_model.pkl) and the Google Gemini visual generator are narrow models. They operate as deterministic/statistical functions: they take a single input vector (text or prompt), compute a single output (probability score or image pixels), and immediately terminate. They possess no memory, no planning capacity, and cannot decide what action to take next.",
+        "1. The Normal AI Components (Narrow AI): "
+    )
+    add_bullet(
+        "The central MemeForge pipeline (src/pipeline.py and app.py) operates as an AI Agent. When given a high-level goal ('Generate high-converting meme campaigns for product X in tone Y'), the agent autonomously decomposes the goal into sequential subtasks: it plans candidate concepts, retrieves templates, calls the predictive classifier tool, filters out low-scoring candidates based on its internal threshold (>60% virality cutoff), invokes the Gemini image synthesis tool, directs typography rendering, and validates the output. If an API fails, it autonomously triggers fallbacks without human intervention.",
+        "2. The AI Agent Orchestrator: "
+    )
 
-    add_h2("2.2 Famous Examples of Normal AI vs. AI Agent")
-    add_p("Famous Normal AI (Narrow AI): DeepMind AlphaFold 2 (or IBM Deep Blue / ResNet-50)", bold_prefix="1. ")
-    add_bullet("AlphaFold 2 is a world-renowned deep neural network that predicts 3D protein structures from amino acid sequences. It is exceptionally superhuman at its single narrow task, but it operates purely as a passive function: it cannot browse the internet, use external tools, formulate dynamic plans, or act autonomously outside its fixed computational pipeline.", "Explanation: ")
+    add_h2("2.2 Comprehensive Comparison: Normal AI vs. AI Agent")
+    add_p(
+        "To clearly distinguish how MemeForge compares to both paradigms, the table below highlights the architectural differences across five key dimensions:"
+    )
 
-    add_p("Famous AI Agent: Devin by Cognition Labs (or AutoGPT / Claude Code / Google Antigravity)", bold_prefix="2. ")
-    add_bullet("Devin is an autonomous software engineering AI agent. Given a high-level user prompt ('Fix GitHub issue #42 and add unit tests'), Devin autonomously formulates a plan, reads project files, writes code, runs terminal commands, analyzes compiler and test output, corrects its own bugs iteratively, and submits a pull request without continuous step-by-step human intervention.", "Explanation: ")
+    # Comparison Table
+    table = doc.add_table(rows=6, cols=3)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.style = 'Light Shading Accent 1'
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = "Dimension"
+    hdr_cells[1].text = "Normal AI (Narrow AI)"
+    hdr_cells[2].text = "AI Agent (Autonomous Agent)"
+    
+    comp_data = [
+        ("Core Function", "Single-purpose task (mapping X -> Y).", "Goal-directed multi-step task execution."),
+        ("Autonomy", "Passive: waits for an exact query, executes once, and halts.", "Active: loops through Plan -> Act -> Observe -> Reason until goal is reached."),
+        ("Tool Use", "Cannot use external tools, APIs, or browse environments.", "Autonomously selects and executes external tools, APIs, code runners, and calculators."),
+        ("Adaptability & Error Handling", "Fails if input is malformed or out-of-distribution; cannot retry.", "Observes errors, formulates fallback strategies, retries alternate tools, and self-corrects."),
+        ("Role in MemeForge", "The Logistic Regression Scorer (scores hit probability in <2ms) and Gemini Diffusion (renders image pixels).", "The Orchestrator pipeline that brainstorms, scores, filters by cutoff, calls image tools, overlays text, and delivers assets.")
+    ]
+    for idx, (dim, n_ai, ag_ai) in enumerate(comp_data):
+        row_cells = table.rows[idx + 1].cells
+        row_cells[0].text = dim
+        row_cells[1].text = n_ai
+        row_cells[2].text = ag_ai
+
+    doc.add_paragraph().paragraph_format.space_after = Pt(6)
+
+    add_h2("2.3 Famous Example of a Normal AI: DeepMind AlphaFold 2")
+    add_bullet(
+        "AlphaFold 2 is one of the most famous and impactful artificial intelligence systems in scientific history. Developed by Google DeepMind, it solved the 50-year-old biological 'protein folding problem' by predicting the 3D atomic coordinates of over 200 million proteins directly from their 1D amino acid sequences with experimental-level accuracy.",
+        "Identity & Fame: "
+    )
+    add_bullet(
+        "AlphaFold 2 is a classic Normal AI (Narrow AI) because it is a passive, specialized deep neural network. Given a protein sequence, it runs forward-pass inference to output structural coordinates and immediately stops. It cannot form goals, browse literature, test biological hypotheses, query external laboratory instruments, or adapt to tasks outside protein geometry.",
+        "Why It is a Normal AI: "
+    )
+
+    add_h2("2.4 Famous Example of an AI Agent: Devin by Cognition Labs")
+    add_bullet(
+        "Devin is celebrated as the world's first fully autonomous AI software engineering agent. Introduced in 2024, it can complete end-to-end software engineering tasks evaluated on the industry-standard SWE-bench benchmark.",
+        "Identity & Fame: "
+    )
+    add_bullet(
+        "Devin is an AI Agent because it is granted high-level autonomy: given a single instruction (e.g., 'Resolve bug #143 in repository X and verify with tests'), Devin creates a plan, searches the codebase, reads documentation, writes code in an editor, executes commands in a live shell, observes compiler warnings and test failures, autonomously debugs its own code, and submits a verified GitHub pull request without human hand-holding.",
+        "Why It is an AI Agent: "
+    )
 
     doc.add_paragraph().paragraph_format.space_after = Pt(8)
 

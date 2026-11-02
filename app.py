@@ -80,11 +80,22 @@ app_mode = st.sidebar.radio(
 
 st.sidebar.divider()
 st.sidebar.subheader("🤖 Gemini AI Integration")
+
+# Detect key from Streamlit secrets, environment variable, or manual input
+secret_key = ""
+try:
+    if hasattr(st, "secrets") and "GEMINI_API_KEY" in st.secrets:
+        secret_key = str(st.secrets["GEMINI_API_KEY"]).strip()
+except Exception:
+    pass
+
+default_key = secret_key or os.environ.get("GEMINI_API_KEY", "")
+
 gemini_key = st.sidebar.text_input(
     "Google Gemini API Key",
-    value=os.environ.get("GEMINI_API_KEY", ""),
+    value=default_key,
     type="password",
-    help="Key used for Google Gemini / Imagen multimodal generation"
+    help="Key used for Google Gemini / Imagen multimodal generation. On Streamlit Cloud, add it under App Settings -> Secrets as GEMINI_API_KEY."
 )
 enable_ai_bg = st.sidebar.checkbox(
     "Enable Gemini Image Generation",
@@ -94,6 +105,13 @@ enable_ai_bg = st.sidebar.checkbox(
 
 if gemini_key:
     st.sidebar.success("🟢 Gemini API Key Connected")
+else:
+    st.sidebar.info("💡 Paste your Gemini key here or set GEMINI_API_KEY in Secrets.")
+
+# Sample AI Meme Showcase in sidebar
+with st.sidebar.expander("🖼️ View Sample Gemini AI Meme"):
+    if os.path.exists("assets/gemini_ai_sample_meme.png"):
+        st.image("assets/gemini_ai_sample_meme.png", caption="Gemini Multimodal Meme Sample", use_container_width=True)
 
 # -----------------------------------------------------------------------------------------
 # VIEW 1: MEME GENERATOR STUDIO

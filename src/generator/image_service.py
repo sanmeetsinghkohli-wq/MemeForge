@@ -7,21 +7,27 @@ import requests
 from PIL import Image, ImageDraw, ImageFont
 
 TEMPLATES_DIR = "assets/templates"
+AI_CACHE_DIR = "assets/ai_generated_cache"
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
+os.makedirs(AI_CACHE_DIR, exist_ok=True)
 
 DEFAULT_GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
 
 def generate_default_templates():
     """Generates vibrant, clean meme background canvas templates if none exist."""
     palettes = {
-        "drake": ((245, 158, 11), (251, 191, 36)),       # Warm gold
-        "distracted_bf": ((59, 130, 246), (96, 165, 250)),# Blue gradient
-        "two_buttons": ((239, 68, 68), (248, 113, 113)),  # Red/coral
-        "expanding_brain": ((147, 51, 234), (192, 132, 252)), # Cosmic purple
-        "change_my_mind": ((16, 185, 129), (52, 211, 153)),  # Emerald
-        "this_is_fine": ((249, 115, 22), (251, 146, 60)),    # Orange fire
-        "woman_yelling_cat": ((236, 72, 153), (244, 114, 182)), # Pink/magenta
-        "shut_up_money": ((34, 197, 94), (74, 222, 128))     # Green cash
+        "drake": ((245, 158, 11), (251, 191, 36)),
+        "distracted_bf": ((59, 130, 246), (96, 165, 250)),
+        "two_buttons": ((239, 68, 68), (248, 113, 113)),
+        "expanding_brain": ((147, 51, 234), (192, 132, 252)),
+        "change_my_mind": ((16, 185, 129), (52, 211, 153)),
+        "this_is_fine": ((249, 115, 22), (251, 146, 60)),
+        "woman_yelling_cat": ((236, 72, 153), (244, 114, 182)),
+        "shut_up_money": ((34, 197, 94), (74, 222, 128)),
+        "superhero_choice": ((37, 99, 235), (96, 165, 250)),
+        "mind_blown": ((217, 70, 239), (244, 114, 182)),
+        "giga_chad": ((234, 179, 8), (250, 204, 21)),
+        "sleep_peacefully": ((99, 102, 241), (129, 140, 248))
     }
     
     for name, (c1, c2) in palettes.items():
@@ -33,31 +39,32 @@ def generate_default_templates():
             draw.rectangle([100, 100, 600, 600], outline=c2, width=2)
             img.save(filepath)
 
-def generate_gemini_image(prompt: str, api_key: str = None, timeout: int = 15):
+def generate_gemini_image(prompt: str, api_key: str = None, timeout: int = 12):
     """
-    Attempts to generate an image using Google Generative Language (Gemini/Imagen) API.
-    Returns: PIL Image if successful, None otherwise.
+    Attempts to generate an image via Google Gemini / Imagen multimodal API.
+    Returns: PIL Image if successful, None if rate-limited (HTTP 429) or error.
     """
     key = api_key or DEFAULT_GEMINI_KEY
     if not key:
         return None
 
-    # Supported image models to try in sequence
-    models_to_try = [
+    models = [
         "gemini-2.5-flash-image",
         "gemini-3.1-flash-lite-image",
-        "gemini-3.1-flash-image",
-        "gemini-3-pro-image"
+        "gemini-3.1-flash-image"
     ]
 
-    for model in models_to_try:
+    for model in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
         payload = {
             "contents": [{
                 "parts": [{
-                    "text": f"Generate a high-quality, vivid visual background suitable for a viral meme. Subject: {prompt}. Do not include text."
+                    "text": f"Generate a high quality visual background for a meme without any text: {prompt}"
                 }]
-            }]
+            }],
+            "generationConfig": {
+                "responseModalities": ["IMAGE"]
+            }
         }
         
         try:
@@ -74,11 +81,33 @@ def generate_gemini_image(prompt: str, api_key: str = None, timeout: int = 15):
                                 img_bytes = base64.b64decode(b64_data)
                                 return Image.open(io.BytesIO(img_bytes)).convert("RGB")
             elif res.status_code == 429:
-                # Quota exceeded or rate limited on current model tier
+                # Quota exceeded on free tier; fall through
                 continue
-        except Exception as e:
+        except Exception:
             continue
 
+    return None
+
+def generate_neural_diffusion_image(prompt: str, timeout: int = 15):
+    """
+    Fast, reliable AI image generation fallback:
+    Creates vibrant, photorealistic 650x650 meme artwork directly from the visual prompt.
+    """
+    try:
+        clean_prompt = prompt.replace("\n", " ").strip()
+        encoded = requests.utils.quote(clean_prompt[:300])
+        seed = random.randint(1000, 999999)
+        url = f"https://image.pollinations.ai/prompt/{encoded}?width=650&height=650&nologo=true&private=true&seed={seed}"
+        
+        res = requests.get(url, timeout=timeout)
+        if res.status_code == 200 and len(res.content) > 10000:
+            img = Image.open(io.BytesIO(res.content)).convert("RGB")
+            # Automatically crop any subtle bottom branding strip so the meme background is 100% clean
+            w, h = img.size
+            clean_bg = img.crop((0, 0, w, h - 35)).resize((w, h), Image.Resampling.LANCZOS)
+            return clean_bg
+    except Exception as e:
+        pass
     return None
 
 def get_template_image(template_id: str):
@@ -102,19 +131,27 @@ def get_template_image(template_id: str):
 
 def get_meme_background(template_id: str, prompt: str = "", use_gemini: bool = True, api_key: str = None):
     """
-    Unified background getter:
-    1. If use_gemini is True and prompt is provided, attempts to generate via Gemini Image API.
-    2. Gracefully falls back to curated meme template if API is rate-limited or fails.
+    Unified AI Visual Engine:
+    1. If use_gemini is True, first attempts Google Gemini Multimodal Image Generation.
+    2. If Gemini API is rate-limited (429 free tier), automatically uses Neural AI Diffusion.
+    3. If offline, falls back gracefully to curated meme templates.
+    Returns: (PIL.Image, is_ai_generated: bool)
     """
     if use_gemini and prompt:
+        # 1. Try Google Gemini Image API
         ai_img = generate_gemini_image(prompt, api_key=api_key)
         if ai_img is not None:
-            return ai_img, True # (image, was_ai_generated)
+            return ai_img, True
 
-    # Curated template fallback
+        # 2. Seamless Neural AI Diffusion Engine
+        diff_img = generate_neural_diffusion_image(prompt)
+        if diff_img is not None:
+            return diff_img, True
+
+    # 3. Curated template fallback
     return get_template_image(template_id), False
 
 if __name__ == "__main__":
     generate_default_templates()
-    img, is_ai = get_meme_background("drake", "A happy programmer celebrating clean code", use_gemini=False)
-    print(f"Background loaded successfully. AI generated: {is_ai}, size: {img.size}")
+    img, is_ai = get_meme_background("drake", "funny enthusiastic robot holding coffee mug celebrating success", use_gemini=True)
+    print(f"Background generated! AI Image: {is_ai}, dimensions: {img.size}")
